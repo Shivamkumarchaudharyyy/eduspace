@@ -1,0 +1,54 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register | Maa English Boarding School</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <main class="auth-container">
+        <div class="auth-card">
+            <h2>Maa <span>School.</span></h2>
+            <h1>Create Account</h1>
+            <p>Join our learning community.</p>
+
+            <form id="register-form">
+                <label>Full Name</label>
+                <input type="text" id="name"
+                    placeholder="Enter your full name" required>
+
+                <label>Email Address</label>
+                <input type="email" id="email"
+                    placeholder="Enter your email" required>
+
+                <label>Password</label>
+                <input type="password" id="password"
+                    placeholder="Create a password" minlength="6" required>
+
+                <label>Register As</label>
+                <select id="role" required>
+                    <option value="student">Student</option>
+                    <option value="teacher">Teacher</option>
+                </select>
+
+                <button type="submit" id="register-btn">
+                    Create Account
+                </button>
+
+                <p id="register-message" aria-live="polite"></p>
+            </form>
+
+            <p>Already have an account?
+                <a href="login.html">Login</a>
+            </p>
+
+            <a href="index.html">← Back to Home</a>
+        </div>
+    </main>
+
+    <script type="module" src="js/register.js"></script>
+</body>
+</html>
