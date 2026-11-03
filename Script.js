@@ -1,4 +1,17 @@
 
+
+
+
+
+
+{
+    title: "Mathematics",
+    teacher: "School Teacher",
+    className: "Class 5",
+    price: "Free",
+    type: "Free",
+    image: "YOUR_IMAGE_URL"
+}
 const courses = [
     {
         title: "Web Development",
