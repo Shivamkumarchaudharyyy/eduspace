@@ -10,75 +10,98 @@ import {
     collection,
     getDocs,
     doc,
+    getDoc,
     updateDoc
 } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-firestore.js";
 
 const teacherList = document.getElementById("teacher-list");
 const userList = document.getElementById("user-list");
 const message = document.getElementById("admin-message");
+const logoutBtn = document.getElementById("logout-btn");
 
 let currentAdmin = null;
 
+// Check administrator
 onAuthStateChanged(auth, async (user) => {
     if (!user) {
         window.location.href = "login.html";
         return;
     }
 
-    const { getDoc } = await import(
-        "https://www.gstatic.com/firebasejs/13.2.0/firebase-firestore.js"
-    );
+    try {
+        const adminDoc = await getDoc(doc(db, "users", user.uid));
 
-    const adminDoc = await getDoc(doc(db, "users", user.uid));
+        if (!adminDoc.exists() ||
+            adminDoc.data().role !== "admin" ||
+            adminDoc.data().status !== "active") {
 
-    if (!adminDoc.exists() ||
-        adminDoc.data().role !== "admin" ||
-        adminDoc.data().status !== "active") {
+            message.textContent = "Access denied.";
+            await signOut(auth);
+            window.location.href = "login.html";
+            return;
+        }
 
-        message.textContent = "Access denied.";
-        await signOut(auth);
-        window.location.href = "login.html";
-        return;
+        currentAdmin = user;
+
+        await loadTeachers();
+        await loadUsers();
+
+    } catch (error) {
+        message.textContent = error.message;
     }
-
-    currentAdmin = user;
-    loadTeachers();
-    loadUsers();
 });
 
+// Load pending teachers
 async function loadTeachers() {
     teacherList.textContent = "Loading...";
 
-    const snapshot = await getDocs(collection(db, "users"));
+    try {
+        const snapshot = await getDocs(collection(db, "users"));
 
-    teacherList.innerHTML = "";
+        teacherList.innerHTML = "";
 
-    snapshot.forEach((item) => {
-        const teacher = item.data();
+        snapshot.forEach((item) => {
+            const teacher = item.data();
 
-        if (teacher.role === "teacher" &&
-            teacher.status === "pending") {
+            if (
+                teacher.role === "teacher" &&
+                teacher.status === "pending"
+            ) {
+                const div = document.createElement("div");
 
-            const div = document.createElement("div");
-            div.innerHTML = `
-                <p>${teacher.name} - ${teacher.email}</p>
-                <button data-id="${item.id}">Approve</button>
-            `;
+                const name = document.createElement("p");
+                name.textContent =
+                    `${teacher.name} - ${teacher.email}`;
 
-            div.querySelector("button").addEventListener(
-                "click",
-                () => approveTeacher(item.id)
-            );
+                const approveBtn = document.createElement("button");
+                approveBtn.textContent = "Approve";
 
-            teacherList.appendChild(div);
+                approveBtn.addEventListener("click", () => {
+                    approveTeacher(item.id);
+                });
+
+                const rejectBtn = document.createElement("button");
+                rejectBtn.textContent = "Reject";
+
+                rejectBtn.addEventListener("click", () => {
+                    rejectTeacher(item.id);
+                });
+
+                div.append(name, approveBtn, rejectBtn);
+                teacherList.appendChild(div);
+            }
+        });
+
+        if (!teacherList.children.length) {
+            teacherList.textContent = "No pending teachers.";
         }
-    });
 
-    if (!teacherList.children.length) {
-        teacherList.textContent = "No pending teachers.";
+    } catch (error) {
+        teacherList.textContent = error.message;
     }
 }
 
+// Approve teacher
 async function approveTeacher(uid) {
     if (!currentAdmin) return;
 
@@ -88,34 +111,63 @@ async function approveTeacher(uid) {
         });
 
         message.textContent = "Teacher approved!";
-        loadTeachers();
-        loadUsers();
+
+        await loadTeachers();
+        await loadUsers();
 
     } catch (error) {
         message.textContent = error.message;
     }
 }
 
-async function loadUsers() {
-    const snapshot = await getDocs(collection(db, "users"));
+// Reject teacher
+async function rejectTeacher(uid) {
+    if (!currentAdmin) return;
 
-    userList.innerHTML = "";
+    const confirmed = confirm("Reject this teacher application?");
 
-    snapshot.forEach((item) => {
-        const user = item.data();
+    if (!confirmed) return;
 
-        const p = document.createElement("p");
-        p.textContent =
-            `${user.name} — ${user.role} — ${user.status}`;
+    try {
+        await updateDoc(doc(db, "users", uid), {
+            status: "rejected"
+        });
 
-        userList.appendChild(p);
-    });
+        message.textContent = "Teacher application rejected.";
+
+        await loadTeachers();
+        await loadUsers();
+
+    } catch (error) {
+        message.textContent = error.message;
+    }
 }
 
-document.getElementById("logout-btn").addEventListener(
-    "click",
-    async () => {
-        await signOut(auth);
-        window.location.href = "login.html";
+// Load users
+async function loadUsers() {
+    try {
+        const snapshot = await getDocs(collection(db, "users"));
+
+        userList.innerHTML = "";
+
+        snapshot.forEach((item) => {
+            const user = item.data();
+
+            const p = document.createElement("p");
+
+            p.textContent =
+                `${user.name} — ${user.role} — ${user.status}`;
+
+            userList.appendChild(p);
+        });
+
+    } catch (error) {
+        userList.textContent = error.message;
     }
-);
+}
+
+// Logout
+logoutBtn.addEventListener("click", async () => {
+    await signOut(auth);
+    window.location.href = "login.html";
+});
