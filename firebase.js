@@ -4,7 +4,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/13.2.0/firebas
 import { getAuth } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-auth.js";
 
 import { getFirestore } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-firestore.js";
-
+import { getStorage } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-storage.js";
 const firebaseConfig = {
     apiKey: "AIzaSyDrp_F2fTzwmy3z7A2OFE4ICliDNgyNaaQ",
     authDomain: "eduspace-platform-944f5.firebaseapp.com",
@@ -25,3 +25,6 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 export { app, auth, db };
+const db = getFirestore(app);
+const storage = getStorage(app);
+export { app, auth, db, storage };
